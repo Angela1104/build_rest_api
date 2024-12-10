@@ -1,11 +1,16 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 from http import HTTPStatus
 import mysql.connector
 from config import DB_CONFIG
+import jwt
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
+
+SECRET_KEY = "angela"
 
 def get_db_connection():
     return mysql.connector.connect(**DB_CONFIG)
@@ -21,8 +26,91 @@ def is_valid_date(date_str):
     except ValueError:
         return False
 
+def create_jwt(user_id):
+    payload = {
+        "user_id": user_id,
+        "exp": datetime.utcnow() + timedelta(hours=1),
+        "iat": datetime.utcnow()  
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
+def verify_jwt(token):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None  
+    except jwt.InvalidTokenError:
+        return None  
+
+# Register route
+@app.route("/api/register", methods=["POST"])
+def register_user():
+    data = request.get_json()
+    if not data or not data.get("email") or not data.get("password"):
+        return jsonify({"success": False, "error": "Email and password are required"}), HTTPStatus.BAD_REQUEST
+
+    email = data["email"]
+    password = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (email, password))
+        conn.commit()
+        return jsonify({"success": True, "message": "User registered successfully"}), HTTPStatus.CREATED
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
+    finally:
+        cursor.close()
+        conn.close()
+
+# Login route
+@app.route("/api/login", methods=["POST"])
+def login_user():
+    data = request.get_json()
+    if not data or not data.get("email") or not data.get("password"):
+        return jsonify({"success": False, "error": "Email and password are required"}), HTTPStatus.BAD_REQUEST
+
+    email = data["email"]
+    password = data["password"]
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+
+        if user and bcrypt.check_password_hash(user["password"], password):
+            token = create_jwt(user["id"])
+            return jsonify({"success": True, "token": token}), HTTPStatus.OK
+        else:
+            return jsonify({"success": False, "error": "Invalid email or password"}), HTTPStatus.UNAUTHORIZED
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
+    finally:
+        cursor.close()
+        conn.close()
+
+def token_required(f):
+    def decorated(*args, **kwargs):
+        token = request.headers.get("Authorization")
+        if not token:
+            return jsonify({"success": False, "error": "Token is missing"}), HTTPStatus.UNAUTHORIZED
+
+        token = token.split(" ")[1] 
+        payload = verify_jwt(token)
+        if not payload:
+            return jsonify({"success": False, "error": "Token is invalid or expired"}), HTTPStatus.UNAUTHORIZED
+
+        request.user = payload
+        return f(*args, **kwargs)
+
+    return decorated
+
 # Courses CRUD
 @app.route("/api/courses", methods=["GET"])
+@token_required
 def get_courses():
     try:
         conn = get_db_connection()
@@ -37,6 +125,7 @@ def get_courses():
         conn.close()
 
 @app.route("/api/courses/<int:course_id>", methods=["GET"])
+@token_required
 def get_course(course_id):
     try:
         conn = get_db_connection()
@@ -53,6 +142,7 @@ def get_course(course_id):
         conn.close()
 
 @app.route("/api/courses", methods=["POST"])
+@token_required
 def create_course():
     data = request.get_json()
     if not data or not data.get("course_name") or not data.get("course_description"):
@@ -75,6 +165,7 @@ def create_course():
         conn.close()
 
 @app.route("/api/courses/<int:course_id>", methods=["PUT"])
+@token_required
 def update_course(course_id):
     data = request.get_json()
     
@@ -103,6 +194,7 @@ def update_course(course_id):
         conn.close()
 
 @app.route("/api/courses/<int:course_id>", methods=["DELETE"])
+@token_required
 def delete_course(course_id):
     try:
         conn = get_db_connection()
@@ -121,6 +213,7 @@ def delete_course(course_id):
 
 # Students CRUD
 @app.route("/api/students", methods=["GET"])
+@token_required
 def get_students():
     try:
         conn = get_db_connection()
@@ -135,6 +228,7 @@ def get_students():
         conn.close()
 
 @app.route("/api/students/<int:student_id>", methods=["GET"])
+@token_required
 def get_student(student_id):
     try:
         conn = get_db_connection()
@@ -151,6 +245,7 @@ def get_student(student_id):
         conn.close()
 
 @app.route("/api/students", methods=["POST"])
+@token_required
 def create_student():
     data = request.get_json()
     if not data or not data.get("student_firstName") or not data.get("student_lastName") or not data.get("student_password"):
@@ -175,6 +270,7 @@ def create_student():
         conn.close()
 
 @app.route("/api/students/<int:student_id>", methods=["PUT"])
+@token_required
 def update_student(student_id):
     data = request.get_json()
 
@@ -203,6 +299,7 @@ def update_student(student_id):
         conn.close()
 
 @app.route("/api/students/<int:student_id>", methods=["DELETE"])
+@token_required
 def delete_student(student_id):
     try:
         conn = get_db_connection()
@@ -221,6 +318,7 @@ def delete_student(student_id):
 
 # Enrollments CRUD
 @app.route("/api/enrollments", methods=["GET"])
+@token_required
 def get_enrollments():
     try:
         conn = get_db_connection()
@@ -235,6 +333,7 @@ def get_enrollments():
         conn.close()
 
 @app.route("/api/enrollments/<int:enrollment_id>", methods=["GET"])
+@token_required
 def get_enrollment(enrollment_id):
     try:
         conn = get_db_connection()
@@ -251,6 +350,7 @@ def get_enrollment(enrollment_id):
         conn.close()
 
 @app.route("/api/enrollments", methods=["POST"])
+@token_required
 def create_enrollment():
     data = request.get_json()
     if not data or not data.get("student_id") or not data.get("course_id") or not data.get("enrollment_date") or not data.get("completion_date"):
@@ -275,6 +375,7 @@ def create_enrollment():
         conn.close()
 
 @app.route("/api/enrollments/<int:enrollment_id>", methods=["PUT"])
+@token_required
 def update_enrollment(enrollment_id):
     data = request.get_json()
 
@@ -303,6 +404,7 @@ def update_enrollment(enrollment_id):
         conn.close()
 
 @app.route("/api/enrollments/<int:enrollment_id>", methods=["DELETE"])
+@token_required
 def delete_enrollment(enrollment_id):
     try:
         conn = get_db_connection()
@@ -324,6 +426,7 @@ def delete_enrollment(enrollment_id):
         
 # Test Results CRUD
 @app.route("/api/test_results", methods=["GET"])
+@token_required
 def get_test_results():
     try:
         conn = get_db_connection()
@@ -338,6 +441,7 @@ def get_test_results():
         conn.close()
 
 @app.route("/api/test_results/<int:test_result_id>", methods=["GET"])
+@token_required
 def get_test_result(test_result_id):
     try:
         conn = get_db_connection()
@@ -354,6 +458,7 @@ def get_test_result(test_result_id):
         conn.close()
 
 @app.route("/api/test_results", methods=["POST"])
+@token_required
 def create_test_result():
     data = request.get_json()
     if not data or not data.get("student_id") or not data.get("test_score") or not data.get("test_date"):
@@ -380,6 +485,7 @@ def create_test_result():
         conn.close()
 
 @app.route("/api/test_results/<int:test_result_id>", methods=["PUT"])
+@token_required
 def update_test_result(test_result_id):
     data = request.get_json()
 
@@ -408,6 +514,7 @@ def update_test_result(test_result_id):
         conn.close()
 
 @app.route("/api/test_results/<int:test_result_id>", methods=["DELETE"])
+@token_required
 def delete_test_result(test_result_id):
     try:
         conn = get_db_connection()
