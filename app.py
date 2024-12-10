@@ -26,11 +26,12 @@ def is_valid_date(date_str):
     except ValueError:
         return False
 
-def create_jwt(user_id):
+def create_jwt(user_id, role):
     payload = {
         "user_id": user_id,
+        "role": role,
         "exp": datetime.utcnow() + timedelta(hours=1),
-        "iat": datetime.utcnow()  
+        "iat": datetime.utcnow()
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
@@ -39,24 +40,28 @@ def verify_jwt(token):
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return payload
     except jwt.ExpiredSignatureError:
-        return None  
+        return None
     except jwt.InvalidTokenError:
-        return None  
+        return None
 
 # Register route
 @app.route("/api/register", methods=["POST"])
 def register_user():
     data = request.get_json()
-    if not data or not data.get("email") or not data.get("password"):
-        return jsonify({"success": False, "error": "Email and password are required"}), HTTPStatus.BAD_REQUEST
+    if not data or not data.get("email") or not data.get("password") or not data.get("role"):
+        return jsonify({"success": False, "error": "Email, password, and role are required"}), HTTPStatus.BAD_REQUEST
 
     email = data["email"]
     password = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
+    role = data["role"].lower()
+
+    if role not in ["student", "admin"]:
+        return jsonify({"success": False, "error": "Invalid role. Role must be 'student' or 'admin'."}), HTTPStatus.BAD_REQUEST
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (email, password))
+        cursor.execute("INSERT INTO users (email, password, role) VALUES (%s, %s, %s)", (email, password, role))
         conn.commit()
         return jsonify({"success": True, "message": "User registered successfully"}), HTTPStatus.CREATED
     except Exception as e:
@@ -82,7 +87,7 @@ def login_user():
         user = cursor.fetchone()
 
         if user and bcrypt.check_password_hash(user["password"], password):
-            token = create_jwt(user["id"])
+            token = create_jwt(user["id"], user["role"])
             return jsonify({"success": True, "token": token}), HTTPStatus.OK
         else:
             return jsonify({"success": False, "error": "Invalid email or password"}), HTTPStatus.UNAUTHORIZED
@@ -92,26 +97,33 @@ def login_user():
         cursor.close()
         conn.close()
 
-def token_required(f):
-    def decorated(*args, **kwargs):
-        token = request.headers.get("Authorization")
-        if not token:
-            return jsonify({"success": False, "error": "Token is missing"}), HTTPStatus.UNAUTHORIZED
+# Middleware to protect routes
+def token_required(roles=None):
+    def decorator(f):
+        def decorated(*args, **kwargs):
+            token = request.headers.get("Authorization")
+            if not token:
+                return jsonify({"success": False, "error": "Token is missing"}), HTTPStatus.UNAUTHORIZED
 
-        token = token.split(" ")[1] 
-        payload = verify_jwt(token)
-        if not payload:
-            return jsonify({"success": False, "error": "Token is invalid or expired"}), HTTPStatus.UNAUTHORIZED
+            token = token.split(" ")[1]
+            payload = verify_jwt(token)
+            if not payload:
+                return jsonify({"success": False, "error": "Token is invalid or expired"}), HTTPStatus.UNAUTHORIZED
 
-        request.user = payload
-        return f(*args, **kwargs)
+            if roles and payload["role"] not in roles:
+                return jsonify({"success": False, "error": "You do not have permission to access this resource"}), HTTPStatus.FORBIDDEN
 
-    return decorated
+            request.user = payload
+            return f(*args, **kwargs)
+
+        return decorated
+
+    return decorator
 
 # Courses CRUD
-@app.route("/api/courses", methods=["GET"])
-@token_required
-def get_courses():
+@app.route("/api/courses", methods=["GET"], endpoint="get_all_courses")
+@token_required(roles=["student", "admin"])
+def get_courses_handler():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -124,9 +136,9 @@ def get_courses():
         cursor.close()
         conn.close()
 
-@app.route("/api/courses/<int:course_id>", methods=["GET"])
-@token_required
-def get_course(course_id):
+@app.route("/api/courses/<int:course_id>", methods=["GET"], endpoint="get_single_course")
+@token_required(roles=["student", "admin"])
+def get_course_handler(course_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -141,9 +153,9 @@ def get_course(course_id):
         cursor.close()
         conn.close()
 
-@app.route("/api/courses", methods=["POST"])
-@token_required
-def create_course():
+@app.route("/api/courses", methods=["POST"], endpoint="create_course")
+@token_required(roles=["admin"])
+def create_course_handler():
     data = request.get_json()
     if not data or not data.get("course_name") or not data.get("course_description"):
         return jsonify({"success": False, "error": "course_name and course_description are required"}), HTTPStatus.BAD_REQUEST
@@ -164,17 +176,14 @@ def create_course():
         cursor.close()
         conn.close()
 
-@app.route("/api/courses/<int:course_id>", methods=["PUT"])
-@token_required
-def update_course(course_id):
+@app.route("/api/courses/<int:course_id>", methods=["PUT"], endpoint="update_course")
+@token_required(roles=["admin"])
+def update_course_handler(course_id):
     data = request.get_json()
-    
     if not data:
         return jsonify({"success": False, "error": "No data provided"}), HTTPStatus.BAD_REQUEST
-    
     if not data.get("course_name") or not data.get("course_description"):
         return jsonify({"success": False, "error": "course_name and course_description are required"}), HTTPStatus.BAD_REQUEST
-
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -193,9 +202,9 @@ def update_course(course_id):
         cursor.close()
         conn.close()
 
-@app.route("/api/courses/<int:course_id>", methods=["DELETE"])
-@token_required
-def delete_course(course_id):
+@app.route("/api/courses/<int:course_id>", methods=["DELETE"], endpoint="delete_course")
+@token_required(roles=["admin"])
+def delete_course_handler(course_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -210,10 +219,10 @@ def delete_course(course_id):
     finally:
         cursor.close()
         conn.close()
-
+        
 # Students CRUD
-@app.route("/api/students", methods=["GET"])
-@token_required
+@app.route("/api/students", methods=["GET"], endpoint="get_students")
+@token_required(roles=["student", "admin"])
 def get_students():
     try:
         conn = get_db_connection()
@@ -227,8 +236,8 @@ def get_students():
         cursor.close()
         conn.close()
 
-@app.route("/api/students/<int:student_id>", methods=["GET"])
-@token_required
+@app.route("/api/students/<int:student_id>", methods=["GET"], endpoint="get_student")
+@token_required(roles=["student", "admin"])
 def get_student(student_id):
     try:
         conn = get_db_connection()
@@ -244,8 +253,8 @@ def get_student(student_id):
         cursor.close()
         conn.close()
 
-@app.route("/api/students", methods=["POST"])
-@token_required
+@app.route("/api/students", methods=["POST"], endpoint="create_student")
+@token_required(roles=["admin"])  
 def create_student():
     data = request.get_json()
     if not data or not data.get("student_firstName") or not data.get("student_lastName") or not data.get("student_password"):
@@ -269,17 +278,14 @@ def create_student():
         cursor.close()
         conn.close()
 
-@app.route("/api/students/<int:student_id>", methods=["PUT"])
-@token_required
+@app.route("/api/students/<int:student_id>", methods=["PUT"], endpoint="update_student")
+@token_required(roles=["admin"]) 
 def update_student(student_id):
     data = request.get_json()
-
     if not data:
         return jsonify({"success": False, "error": "No data provided"}), HTTPStatus.BAD_REQUEST
-
     if not data.get("student_firstName") or not data.get("student_lastName"):
         return jsonify({"success": False, "error": "student_firstName and student_lastName are required"}), HTTPStatus.BAD_REQUEST
-
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -298,8 +304,8 @@ def update_student(student_id):
         cursor.close()
         conn.close()
 
-@app.route("/api/students/<int:student_id>", methods=["DELETE"])
-@token_required
+@app.route("/api/students/<int:student_id>", methods=["DELETE"], endpoint="delete_student")
+@token_required(roles=["admin"])
 def delete_student(student_id):
     try:
         conn = get_db_connection()
@@ -315,10 +321,10 @@ def delete_student(student_id):
     finally:
         cursor.close()
         conn.close()
-
+        
 # Enrollments CRUD
-@app.route("/api/enrollments", methods=["GET"])
-@token_required
+@app.route("/api/enrollments", methods=["GET"], endpoint="get_enrollments")
+@token_required(roles=["student", "admin"])
 def get_enrollments():
     try:
         conn = get_db_connection()
@@ -332,8 +338,8 @@ def get_enrollments():
         cursor.close()
         conn.close()
 
-@app.route("/api/enrollments/<int:enrollment_id>", methods=["GET"])
-@token_required
+@app.route("/api/enrollments/<int:enrollment_id>", methods=["GET"], endpoint="get_enrollment")
+@token_required(roles=["student", "admin"])
 def get_enrollment(enrollment_id):
     try:
         conn = get_db_connection()
@@ -349,8 +355,8 @@ def get_enrollment(enrollment_id):
         cursor.close()
         conn.close()
 
-@app.route("/api/enrollments", methods=["POST"])
-@token_required
+@app.route("/api/enrollments", methods=["POST"], endpoint="create_enrollment")
+@token_required(roles=["admin"])
 def create_enrollment():
     data = request.get_json()
     if not data or not data.get("student_id") or not data.get("course_id") or not data.get("enrollment_date") or not data.get("completion_date"):
@@ -374,17 +380,14 @@ def create_enrollment():
         cursor.close()
         conn.close()
 
-@app.route("/api/enrollments/<int:enrollment_id>", methods=["PUT"])
-@token_required
+@app.route("/api/enrollments/<int:enrollment_id>", methods=["PUT"], endpoint="update_enrollment")
+@token_required(roles=["admin"])
 def update_enrollment(enrollment_id):
     data = request.get_json()
-
     if not data:
         return jsonify({"success": False, "error": "No data provided"}), HTTPStatus.BAD_REQUEST
-
     if not data.get("student_id") or not data.get("course_id") or not data.get("enrollment_date") or not data.get("completion_date"):
         return jsonify({"success": False, "error": "student_id, course_id, enrollment_date, and completion_date are required"}), HTTPStatus.BAD_REQUEST
-
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -403,30 +406,27 @@ def update_enrollment(enrollment_id):
         cursor.close()
         conn.close()
 
-@app.route("/api/enrollments/<int:enrollment_id>", methods=["DELETE"])
-@token_required
+@app.route("/api/enrollments/<int:enrollment_id>", methods=["DELETE"], endpoint="delete_enrollment")
+@token_required(roles=["admin"])
 def delete_enrollment(enrollment_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM enrollments WHERE enrollment_id = %s", (enrollment_id,))
-        result = cursor.fetchone()
-               
-        if result is None:
+        cursor.execute("DELETE FROM enrollments WHERE enrollment_id = %s", (enrollment_id,))
+        conn.commit()
+        if cursor.rowcount == 0:
             return jsonify({"success": False, "error": "Enrollment not found"}), HTTPStatus.NOT_FOUND
-
-        return jsonify({"success": False, "error": "Deletion not allowed due to foreign key constraints"}), HTTPStatus.FORBIDDEN
-
+        return jsonify({"success": True, "message": f"Enrollment with ID {enrollment_id} has been deleted"}), HTTPStatus.OK
     except Exception as e:
+        conn.rollback()
         return jsonify({"success": False, "error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
-
     finally:
         cursor.close()
         conn.close()
         
 # Test Results CRUD
-@app.route("/api/test_results", methods=["GET"])
-@token_required
+@app.route("/api/test_results", methods=["GET"], endpoint="get_test_results")
+@token_required(roles=["student", "admin"]) 
 def get_test_results():
     try:
         conn = get_db_connection()
@@ -440,8 +440,8 @@ def get_test_results():
         cursor.close()
         conn.close()
 
-@app.route("/api/test_results/<int:test_result_id>", methods=["GET"])
-@token_required
+@app.route("/api/test_results/<int:test_result_id>", methods=["GET"], endpoint="get_test_result")
+@token_required(roles=["student", "admin"])  
 def get_test_result(test_result_id):
     try:
         conn = get_db_connection()
@@ -457,8 +457,8 @@ def get_test_result(test_result_id):
         cursor.close()
         conn.close()
 
-@app.route("/api/test_results", methods=["POST"])
-@token_required
+@app.route("/api/test_results", methods=["POST"], endpoint="create_test_result")
+@token_required(roles=["admin"])  
 def create_test_result():
     data = request.get_json()
     if not data or not data.get("student_id") or not data.get("test_score") or not data.get("test_date"):
@@ -484,17 +484,15 @@ def create_test_result():
         cursor.close()
         conn.close()
 
-@app.route("/api/test_results/<int:test_result_id>", methods=["PUT"])
-@token_required
+@app.route("/api/test_results/<int:test_result_id>", methods=["PUT"], endpoint="update_test_result")
+@token_required(roles=["admin"]) 
 def update_test_result(test_result_id):
     data = request.get_json()
 
     if not data:
         return jsonify({"success": False, "error": "No data provided"}), HTTPStatus.BAD_REQUEST
-
     if not data.get("student_id") or not data.get("test_score") or not data.get("test_date"):
         return jsonify({"success": False, "error": "student_id, test_score, and test_date are required"}), HTTPStatus.BAD_REQUEST
-
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -513,23 +511,22 @@ def update_test_result(test_result_id):
         cursor.close()
         conn.close()
 
-@app.route("/api/test_results/<int:test_result_id>", methods=["DELETE"])
-@token_required
+@app.route("/api/test_results/<int:test_result_id>", methods=["DELETE"], endpoint="delete_test_result")
+@token_required(roles=["admin"]) 
 def delete_test_result(test_result_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM test_results WHERE test_result_id = %s", (test_result_id,))
         result = cursor.fetchone()
-        
         if result is None:
             return jsonify({"success": False, "error": "Test result not found"}), HTTPStatus.NOT_FOUND
-
-        return jsonify({"success": False, "error": "Deletion not allowed due to foreign key constraints"}), HTTPStatus.FORBIDDEN
-
+        cursor.execute("DELETE FROM test_results WHERE test_result_id = %s", (test_result_id,))
+        conn.commit()
+        return jsonify({"success": True, "message": f"Test result with ID {test_result_id} has been deleted"}), HTTPStatus.OK
     except Exception as e:
+        conn.rollback()
         return jsonify({"success": False, "error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
-
     finally:
         cursor.close()
         conn.close()
