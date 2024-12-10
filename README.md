@@ -18,7 +18,7 @@ mysql-connector-python==8.2.0
 DATABASE_URL: The URL for the database connection.
 
 # API Endpoints (markdown table)
-Endpoint	                   Method	 	         Description
+Endpoint	                   Method	 	   Description
 ======================================================================================================================
 /api/students	                   GET		           List of students
 /api/students/{id}	           GET		           Specific student
