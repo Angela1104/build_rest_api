@@ -7,10 +7,12 @@ This data model ensures that all core processes of an e-learning platform are ef
 
 ```cmd
 # Installation
-pip install flask
-pip install Flask Flask-MySQL
-pip install flask-sqlalchemy
-pip install pytest
+Flask==2.3.2
+Flask-SQLAlchemy==3.0.5
+pytest==7.4.2
+pytest-flask==1.2.0
+jsonschema==4.19.0
+mysql-connector-python==8.2.0
 
 # Configuration
 DATABASE_URL: The URL for the database connection.
