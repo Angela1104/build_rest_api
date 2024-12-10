@@ -13,6 +13,7 @@ pytest==7.4.2
 pytest-flask==1.2.0
 jsonschema==4.19.0
 mysql-connector-python==8.2.0
+faker==33.1.0
 
 # Configuration
 DATABASE_URL: The URL for the database connection.
@@ -46,3 +47,7 @@ Endpoint	                   Method	 	   Description
 -- Start your testing.
 
 # Git Commit Guidelines
+feat: add user authentication
+fix: resolve database connection issue
+docs: update API documentation
+test: add user tests
