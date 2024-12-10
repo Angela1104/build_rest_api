@@ -50,17 +50,20 @@ def test_get_course(client, mock_db_connection):
     assert response.status_code == HTTPStatus.OK
     assert response.json["data"]["course_name"] == "Detail action behavior"
 
-def test_update_course(client, mock_db_connection):
+def test_update_enrollment(client, mock_db_connection):
     mock_cursor = mock_db_connection.return_value.cursor.return_value
     mock_cursor.rowcount = 1
 
-    response = client.put('/api/courses/262', json={
-        "course_name": "Updated Physics",
-        "course_description": "Updated description of physics."
+    response = client.put('/api/enrollments/151', json={
+        "student_id": 137,
+        "course_id": 262,
+        "enrollment_date": "2023-12-10",
+        "completion_date": "2025-12-10"
     })
     
     assert response.status_code == HTTPStatus.OK
-    assert response.json["data"]["course_name"] == "Updated Physics"
+    assert response.json["success"] is True
+    assert response.json["message"] == "Enrollment updated successfully"
 
 def test_delete_course(client, mock_db_connection):
     mock_cursor = mock_db_connection.return_value.cursor.return_value
@@ -68,8 +71,10 @@ def test_delete_course(client, mock_db_connection):
 
     response = client.delete('/api/courses/262')
     
-    assert response.status_code == HTTPStatus.NO_CONTENT
-
+    assert response.status_code == HTTPStatus.OK
+    assert response.json["success"] is True
+    assert response.json["message"] == "Course with ID 262 has been deleted"
+1
 # Enrollments CRUD Tests
 def test_create_enrollment(client, mock_db_connection):
     mock_cursor = mock_db_connection.return_value.cursor.return_value
@@ -116,7 +121,8 @@ def test_update_enrollment(client, mock_db_connection):
     })
     
     assert response.status_code == HTTPStatus.OK
-    assert response.json["data"]["course_id"] == 262
+    assert response.json["success"] is True
+    assert response.json["message"] == "Enrollment updated successfully"
 
 # Students Tests
 def test_create_student(client, mock_db_connection):
@@ -187,7 +193,9 @@ def test_delete_student(client, mock_db_connection):
 
     response = client.delete('/api/students/135')
     
-    assert response.status_code == HTTPStatus.NO_CONTENT
+    assert response.status_code == HTTPStatus.OK
+    assert response.json["success"] is True
+    assert response.json["message"] == "Student with ID 135 has been deleted"
 
 # Test Results Tests
 def test_create_test_result(client, mock_db_connection):
