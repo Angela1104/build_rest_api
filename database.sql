@@ -27,7 +27,7 @@ CREATE TABLE `courses` (
   `course_name` varchar(255) NOT NULL,
   `course_description` text,
   PRIMARY KEY (`course_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=254 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=267 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -36,7 +36,7 @@ CREATE TABLE `courses` (
 
 LOCK TABLES `courses` WRITE;
 /*!40000 ALTER TABLE `courses` DISABLE KEYS */;
-INSERT INTO `courses` VALUES (200,'CS Elective','computer theory with engineering.'),(201,'Data Science','summarizes the data in a meaningful way which enables us to generate insights from it.');
+INSERT INTO `courses` VALUES (262,'Detail action behavior','Why change wear front director above.'),(263,'Truth','Move travel organization firm treat.'),(264,'Music safe enter','Art expect catch suffer lawyer force.'),(265,'Name sport','Option others investment issue myself poor.'),(266,'Physical bag','Fly herself choose stay chance catch four.');
 /*!40000 ALTER TABLE `courses` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -58,7 +58,7 @@ CREATE TABLE `enrollments` (
   KEY `enrollments_ibfk_2` (`course_id`),
   CONSTRAINT `enrollments_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
   CONSTRAINT `enrollments_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=151 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=181 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -67,7 +67,7 @@ CREATE TABLE `enrollments` (
 
 LOCK TABLES `enrollments` WRITE;
 /*!40000 ALTER TABLE `enrollments` DISABLE KEYS */;
-INSERT INTO `enrollments` VALUES (100,1,200,'2024-12-09','2024-12-09'),(101,2,200,'2024-12-09','2024-12-14'),(102,3,201,'2024-12-09','2024-12-10'),(103,4,201,'2024-12-09','2024-12-10'),(104,5,201,'2024-12-09','2024-12-10'),(105,6,200,'2024-12-09','2024-12-14'),(106,7,200,'2024-12-09','2024-12-14'),(107,8,200,'2024-12-09','2024-12-14'),(108,9,200,'2024-12-09','2024-12-14'),(109,10,200,'2024-12-09','2024-12-14'),(111,11,200,'2024-12-10','2026-12-10'),(112,12,201,'2024-12-09','2024-12-10'),(113,13,201,'2024-12-09','2024-12-10'),(114,14,200,'2024-12-09','2024-12-14'),(115,15,200,'2024-12-09','2024-12-14'),(116,16,200,'2024-12-09','2024-12-14'),(117,17,201,'2024-12-09','2024-12-10'),(118,18,200,'2024-12-09','2024-12-14'),(119,19,201,'2024-12-09','2024-12-10'),(120,20,201,'2024-12-09','2024-12-10'),(121,21,201,'2024-12-09','2024-12-10'),(122,22,201,'2024-12-09','2024-12-10'),(123,23,201,'2024-12-09','2024-12-10'),(124,24,200,'2024-12-09','2024-12-14'),(125,25,200,'2024-12-09','2024-12-14'),(126,26,200,'2024-12-09','2024-12-14'),(127,27,201,'2024-12-09','2024-12-10'),(128,28,201,'2024-12-09','2024-12-10'),(129,29,200,'2024-12-09','2024-12-14'),(130,30,200,'2024-12-09','2024-12-10');
+INSERT INTO `enrollments` VALUES (151,137,266,'2022-11-13','2025-05-25'),(152,158,266,'2020-12-14','2025-11-11'),(153,150,263,'2023-10-15','2025-02-28'),(154,159,262,'2020-08-28','2023-07-07'),(155,149,262,'2020-10-31','2025-06-06'),(156,160,266,'2022-09-29','2025-08-27'),(157,135,263,'2021-02-09','2024-10-19'),(158,145,265,'2021-05-16','2021-06-13'),(159,149,263,'2020-12-06','2022-06-06'),(160,151,266,'2021-07-27','2025-07-30'),(161,131,264,'2022-06-28','2023-07-11'),(162,154,263,'2020-02-15','2022-11-08'),(163,144,262,'2020-01-07','2024-12-03'),(164,132,263,'2023-04-06','2024-03-07'),(165,148,265,'2024-08-07','2025-03-27'),(166,151,266,'2021-06-13','2022-05-29'),(167,131,262,'2021-04-08','2021-08-20'),(168,143,264,'2021-07-18','2023-01-12'),(169,156,266,'2022-11-17','2024-05-01'),(170,139,263,'2022-10-23','2025-08-31'),(171,138,263,'2022-07-28','2024-05-11'),(172,142,262,'2023-11-13','2023-12-23'),(173,133,262,'2020-05-07','2022-01-31'),(174,159,263,'2024-04-15','2024-12-22'),(175,151,266,'2021-02-11','2025-09-20'),(176,149,266,'2023-07-11','2025-03-11'),(177,145,266,'2022-10-24','2024-10-19'),(178,135,264,'2020-07-03','2021-03-02'),(179,136,264,'2020-10-08','2025-06-06'),(180,150,266,'2024-01-31','2025-01-17');
 /*!40000 ALTER TABLE `enrollments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -87,7 +87,7 @@ CREATE TABLE `students` (
   PRIMARY KEY (`student_id`),
   UNIQUE KEY `student_password_UNIQUE` (`student_password`),
   UNIQUE KEY `student_email` (`student_email`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=161 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -96,7 +96,7 @@ CREATE TABLE `students` (
 
 LOCK TABLES `students` WRITE;
 /*!40000 ALTER TABLE `students` DISABLE KEYS */;
-INSERT INTO `students` VALUES (1,'Karen Angela','Realubit','angela@gmail.com','ftgbnutwqa'),(2,'Jadelyn','Bernabe','bernabe@gmail.com','gtghtswaff'),(3,'Rashel','Gadiano','gadiano@gmail.com','yhrewqahkh'),(4,'Denz Kayla Marie','Gabaldon','gabaldon@gmail.com','hopfrabnmd'),(5,'Jose Wilson','Almonte','almonte@gmail.com','yugrdswqaz'),(6,'Mark Danielle','Lucero','lucero@gmail.com','grewxvbmop'),(7,'Cassandra','Cayao','cayao@gmail.com','plmnjkoiuh'),(8,'Juliet','Rey','rey@gmail.com','bvgytfcxdr'),(9,'Chinnie Mae','Abad','abad@gmail.com','eszaqwesxc'),(10,'Issa Mae','Rustia','rustia@gmail.com','vbgtrfhjki'),(11,'Mark Joseph','Alilano','alilano@gmail.com','htfedsqazx'),(12,'John Rafael','Macalinao','macalinao@gmail.com','hjmngtdesx'),(13,'John Vincent','Labotoy','labotoy@gmail.com','hknlydswcg'),(14,'Mary Jobelle','Abreu','abreu@gmail.com','hnvfredswq'),(15,'Stephanie Rose','Aguda','aguda@gmail.com','gbnmvvfdes'),(16,'Dansel','Ranola','ranola@gmail.com','ftgplokiuj'),(17,'Dm','Dalanon','dalanon@gmail.com','jjuuhhtfgr'),(18,'Irish Cristel','Roll','roll@gmail.com','gtyffedsww'),(19,'Ivan Darry','Pono','pono@gmail.com','ftrdeewsjk'),(20,'Kyla','Decatoria','decatoria@gmail.com','kkjygbnmvv'),(21,'Siradz','Sahiddin','sahiddin@gmail.com','gthnbvfred'),(22,'Mary Mae','Apilan','apilan@gmail.com','ghnbvcdewq'),(23,'Kurt Justine','Realubit','justine@gmail.com','aszxdrtyui'),(24,'Rianne','Gardoce','gardoce@gmail.com','gtyhnbgtrf'),(25,'Judy','Visabella','visabella@gmail.com','erfvplmnju'),(26,'John Wynne','Jeresano','jeresano@gmail.com','ceswqghbtr'),(27,'Darwin','Velasco','velasco@gmail.com','decswercv'),(28,'Shai Mae','Andes','andes@gmail.com','frghjklmnb'),(29,'Krisha Chynna','Realubit','chynna@gmail.com','vcxzasdfgh'),(30,'Michael','Austria','austria@gmail.com','ghtbnhfdde');
+INSERT INTO `students` VALUES (131,'Regina','Jackson','kellymitchell@example.net','LKac0YZf)T'),(132,'Allison','Benson','waltonjennifer@example.com','YU*m9Yn4@S'),(133,'Walter','Green','laura99@example.net','#l&mLAFOg2'),(134,'Jimmy','Aguilar','hillcourtney@example.com','(M5VYzt@c%'),(135,'Thomas','Sawyer','boltonrobert@example.net','wnyFBYjN&1'),(136,'Dale','Lam','dsilva@example.org','3_y7d@ug*B'),(137,'Catherine','Ingram','andrew33@example.org','a#7KgXp$A!'),(138,'Laurie','Andrews','colin29@example.net','_+6CvHv#%V'),(139,'Christopher','Raymond','cynthiabarnett@example.com','I9sbGq8d#r'),(140,'Daniel','Thompson','curryconnie@example.com','2(o4)wkh^Q'),(141,'Stephanie','Gaines','elizabeth85@example.net','&e4a(CHkP*'),(142,'Kathy','Nelson','zbass@example.org','x)aKp0j7@5'),(143,'Erika','Guzman','mooreapril@example.com','gvNFtXzG^3'),(144,'Brooke','Mcdonald','melissajones@example.org','(BEd9UqmW)'),(145,'Sarah','Smith','randydavis@example.com','@g3Zp*171%'),(146,'Jennifer','Hernandez','john22@example.org','2BRePXBQ%z'),(147,'Chelsea','Jackson','ikeller@example.org','a$#6%MsZG4'),(148,'Thomas','Gonzalez','debbiecameron@example.org','I9I@AQIr_S'),(149,'Jonathan','Henderson','jacobslindsay@example.net','!27Xueovcg'),(150,'Desiree','Allen','ibarratracy@example.com','2dbU3@o1_0'),(151,'David','Lewis','jeffrey69@example.net','$yMOY!%oo8'),(152,'Kim','Martinez','allisonamy@example.org','!#4WLZaDz%'),(153,'Matthew','Cantu','tammy51@example.org','GbzC^8Yie&'),(154,'Dale','Bush','michaeljackson@example.com','m9m1ZBd@!q'),(155,'Richard','Williams','veronica45@example.net','+J+9ofVsC8'),(156,'Christopher','Poole','davidporter@example.net','B(8PyHx)#g'),(157,'Jody','Walker','fieldskatie@example.org','ME*F9tGi*g'),(158,'Timothy','Guzman','nfrench@example.net','6MI8QDwt(b'),(159,'Jessica','Hall','dpeck@example.com','_jU0MCqvu_'),(160,'Robert','White','andersonlisa@example.com','$VR7yo%tJ5');
 /*!40000 ALTER TABLE `students` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -115,7 +115,7 @@ CREATE TABLE `test_results` (
   PRIMARY KEY (`test_result_id`),
   KEY `test_results_ibfk_1` (`student_id`),
   CONSTRAINT `test_results_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=344 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=474 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -124,7 +124,7 @@ CREATE TABLE `test_results` (
 
 LOCK TABLES `test_results` WRITE;
 /*!40000 ALTER TABLE `test_results` DISABLE KEYS */;
-INSERT INTO `test_results` VALUES (301,1,90.00,'2022-12-02'),(302,2,67.00,'2022-12-02'),(303,3,99.00,'2022-12-02'),(304,4,90.00,'2022-12-02'),(305,5,98.00,'2022-12-02'),(306,6,96.00,'2022-12-02'),(307,7,94.00,'2022-12-02'),(308,8,99.00,'2022-12-02'),(309,9,98.00,'2022-12-02'),(310,10,93.00,'2022-12-02'),(311,11,90.00,'2022-12-02'),(312,12,90.00,'2022-12-02'),(313,13,91.00,'2022-12-02'),(314,14,99.00,'2022-12-02'),(315,15,89.00,'2022-12-02'),(316,16,87.00,'2022-12-02'),(317,17,81.00,'2022-12-02'),(318,18,89.00,'2022-12-02'),(319,19,89.00,'2022-12-02'),(320,20,98.00,'2022-12-02'),(321,21,93.00,'2022-12-02'),(322,22,92.00,'2022-12-02'),(323,23,91.00,'2022-12-02'),(324,24,99.00,'2022-12-02'),(325,25,91.00,'2022-12-02'),(326,26,98.00,'2022-12-02'),(327,27,96.00,'2022-12-02'),(328,28,94.00,'2022-12-02'),(329,29,96.00,'2022-12-02'),(330,30,90.00,'2022-12-02');
+INSERT INTO `test_results` VALUES (444,155,91.00,'2024-07-10'),(445,133,98.00,'2024-09-26'),(446,131,94.00,'2024-03-23'),(447,160,92.00,'2024-01-13'),(448,153,94.00,'2024-06-16'),(449,154,99.00,'2024-08-31'),(450,147,97.00,'2024-04-09'),(451,146,95.00,'2024-02-06'),(452,160,89.00,'2024-04-17'),(453,151,92.00,'2024-01-27'),(454,134,100.00,'2024-10-04'),(455,138,98.00,'2024-10-30'),(456,139,89.00,'2024-02-09'),(457,159,97.00,'2024-10-30'),(458,136,93.00,'2024-05-20'),(459,137,93.00,'2024-02-29'),(460,132,88.00,'2024-06-09'),(461,140,100.00,'2024-06-19'),(462,152,97.00,'2024-08-04'),(463,141,97.00,'2024-09-12'),(464,150,91.00,'2024-06-10'),(465,146,94.00,'2024-08-11'),(466,136,99.00,'2024-11-13'),(467,145,89.00,'2024-02-05'),(468,141,92.00,'2024-05-04'),(469,136,91.00,'2024-11-25'),(470,142,95.00,'2024-01-18'),(471,132,98.00,'2024-02-02'),(472,145,95.00,'2024-09-06'),(473,160,97.00,'2024-03-14');
 /*!40000 ALTER TABLE `test_results` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -137,4 +137,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-12-10  7:40:01
+-- Dump completed on 2024-12-10 14:18:38
