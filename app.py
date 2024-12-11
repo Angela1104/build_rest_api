@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import Flask, jsonify, request
 from http import HTTPStatus
 import mysql.connector
@@ -9,6 +9,8 @@ from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
+
+app = Flask(__name__)
 
 SECRET_KEY = "angela"
 
@@ -30,8 +32,8 @@ def create_jwt(user_id, role):
     payload = {
         "user_id": user_id,
         "role": role,
-        "exp": datetime.utcnow() + timedelta(hours=1),
-        "iat": datetime.utcnow()
+        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+        "iat": datetime.now(timezone.utc)
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
@@ -222,7 +224,7 @@ def delete_course_handler(course_id):
         
 # Students CRUD
 @app.route("/api/students", methods=["GET"], endpoint="get_students")
-@token_required(roles=["student", "admin"])
+@token_required(roles=["admin"])
 def get_students():
     try:
         conn = get_db_connection()
