@@ -7,13 +7,13 @@ This data model ensures that all core processes of an e-learning platform are ef
 
 ```cmd
 # Installation
-Flask==2.3.2
-Flask-SQLAlchemy==3.0.5
-pytest==7.4.2
-pytest-flask==1.2.0
-jsonschema==4.19.0
+Flask==3.1.0
+Flask-Bcrypt==0.7.1
 mysql-connector-python==8.2.0
-faker==33.1.0
+PyJWT==2.7.0
+pytest==8.3.3
+pytest-mock==3.10.0
+python==3.12.3
 
 # Configuration
 DATABASE_URL: The URL for the database connection.
